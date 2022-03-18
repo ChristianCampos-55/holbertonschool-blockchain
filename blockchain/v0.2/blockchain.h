@@ -108,4 +108,4 @@ int block_is_valid(block_t const *block, block_t const *prev_block);
 void block_mine(block_t *block);
 uint32_t blockchain_difficulty(blockchain_t const *blockchain);
 
-#endif /* __BLOCKCHAIN_H_ */
+#endif
