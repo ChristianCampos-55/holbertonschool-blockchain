@@ -1,39 +1,35 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <dirent.h>
-#include <string.h>
 #include "hblk_crypto.h"
 
+/**
+* ec_load - loads keys
+* @folder: folder storage
+* Return: key pair
+ */
 
-EC_KEY *ec_load(char const *folder){
-	
-	EC_KEY *key;
-	char pub_path[PATH_MAX];
-	char pv_path[PATH_MAX];
-	FILE *pubf;
-	FILE *pvf;
-	
-	if(!opendir(folder))
-	{
-		fprintf(stderr,"%s","Unknown directory");	
-	}
-	snprintf(pub_path,PATH_MAX,"%s/%s",folder,PUB_FILENAME);
-	snprintf(pv_path,PATH_MAX,"%s/%s",folder,PRI_FILENAME);
+EC_KEY *ec_load(char const *folder)
+{
+	EC_KEY *key = NULL;
+	char file[512] = {0};
+	FILE *fp;
+	struct stat st;
 
-	pubf = fopen(pub_path,"w+");
-	pvf = fopen(pv_path,"w+");
-
-	if(PEM_read_EC_PUBKEY(pubf,&key,NULL,NULL)==0){
-		fclose(pubf);
-		fclose(pvf);
-		return NULL;
-	}
-	if(PEM_read_ECPrivateKey(pvf,&key,NULL,NULL) == 0){
-		fclose(pubf);
-		fclose(pvf);
-		return NULL;
-	}
-	fclose(pubf);
-	fclose(pvf);
-	return key;
+	if (!folder)
+		return (NULL);
+	if (stat(folder, &st) == -1)
+		return (NULL);
+	sprintf(file, "./%s/%s", folder, PUB_FILENAME);
+	fp = fopen(file, "r");
+	if (!fp)
+		return (NULL);
+	if (!PEM_read_EC_PUBKEY(fp, &key, NULL, NULL))
+		return (NULL);
+	fclose(fp);
+	sprintf(file, "./%s/%s", folder, PRI_FILENAME);
+	fp = fopen(file, "r");
+	if (!fp)
+		return (NULL);
+	if (!PEM_read_ECPrivateKey(fp, &key, NULL, NULL))
+		return (NULL);
+	fclose(fp);
+	return (key);
 }

@@ -1,18 +1,17 @@
 #include "hblk_crypto.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-
-uint8_t *sha256(int8_t const *s, size_t len, uint8_t digest
-				[SHA256_DIGEST_LENGTH]) {
-
-	if (digest == NULL)
-	{
+/**
+* sha256 - find hash value (digest) of a sequence of bytes
+* @s: byte sequence
+* @len: lenght of @s
+* @digest: buffer to store the digest
+* Return: digest or NULL if failed
+*/
+uint8_t *sha256(int8_t const *s,
+				size_t len,
+				uint8_t digest[SHA256_DIGEST_LENGTH])
+{
+	if (!s || !digest)
 		return (NULL);
-	}
-	else
-	{
-		return ((uint8_t *)SHA256((unsigned char *)s, len, (unsigned char *)digest));
-	}
+	return (SHA256((void *)s, len, digest));
 }

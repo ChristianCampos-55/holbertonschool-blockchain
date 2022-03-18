@@ -1,18 +1,28 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include "hblk_crypto.h"
 
+/**
+* ec_sign - msg with EC_KEY pair
+* @key: key pair
+* @msg: sign
+* @msglen: message length
+* @sig: sign
+* Return: buffer
+*/
 
-uint8_t *ec_sign(EC_KEY const *key, uint8_t const *msg, size_t msglen, sig_t *sig){
+uint8_t *ec_sign(EC_KEY const *key, uint8_t const *msg,
+				 size_t msglen, sig_t *sig)
+{
+	uint32_t len = 0;
 
-	uint8_t *len = &sig->len;
-	if(key == NULL || msg == NULL){
-		return NULL;
+	if (!key || !msg || !msglen)
+		return (NULL);
+
+	memset(sig->sig, 0, sizeof(sig->sig));
+	if (!ECDSA_sign(0, msg, (int)msglen, sig->sig, &len, (EC_KEY *)key))
+	{
+		sig->len = 0;
+		return (NULL);
 	}
-	*len = ECDSA_size(key);
-	if(ECDSA_sign(0,(const unsigned char *)msg,msglen,(unsigned char *)sig,(unsigned int *)len,(EC_KEY*)key)==0){
-		return NULL;
-	}
-	return sig->sig;
-
+	sig->len = (uint8_t)len;
+	return (sig->sig);
 }
