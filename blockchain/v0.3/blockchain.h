@@ -65,6 +65,7 @@ typedef struct block_info_s
  * struct block_s - structure
  * @info: info
  * @data: data
+ * @transactions: transactions
  * @hash: 256-bit digest
  */
 
