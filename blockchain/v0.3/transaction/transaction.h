@@ -14,6 +14,21 @@
 #define TX_OUT_HASH_LEN (sizeof(uint32_t) + EC_PUB_LEN)
 
 /**
+ * struct transaction_s - Transaction structure
+ *
+ * @id:      Transaction ID. A hash of all the inputs and outputs.
+ *           Prevents further alteration of the transaction.
+ * @inputs:  List of `tx_in_t *`. Transaction inputs
+ * @outputs: List of `tx_out_t *`. Transaction outputs
+ */
+typedef struct transaction_s
+{
+	uint8_t     id[SHA256_DIGEST_LENGTH];
+	llist_t     *inputs;
+	llist_t     *outputs;
+} transaction_t;
+
+/**
  * struct tx_out_s - Transaction output
  *
  * @amount: Amount received
