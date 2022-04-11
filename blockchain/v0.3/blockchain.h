@@ -18,6 +18,7 @@
 #define BLOCK_GENERATION_INTERVAL 1
 #define DIFFICULTY_ADJUSTMENT_INTERVAL 5
 
+
 /**
  * struct blockchain_s - Block struct
  * @chain: pointers to block_t
@@ -49,7 +50,7 @@ typedef struct block_data_s
  * @timestamp: time of creation
  * @nonce: alter block
  * @prev_hash: prev block in chain
- */
+ */ 
 
 typedef struct block_info_s
 {
@@ -71,6 +72,7 @@ typedef struct block_s
 {
 	block_info_t    info;
 	block_data_t    data;
+	llist_t     *transactions;
 	uint8_t     hash[SHA256_DIGEST_LENGTH];
 } block_t;
 
