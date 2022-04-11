@@ -11,6 +11,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "../blockchain.h"
+#define TX_OUT_HASH_LEN (sizeof(uint32_t) + EC_PUB_LEN)
 
 /**
  * struct tx_out_s - Transaction output
