@@ -9,19 +9,15 @@
 
 tx_out_t *tx_out_create(uint32_t amount, uint8_t const pub[EC_PUB_LEN])
 {
-	tx_out_t *trans;
+	tx_out_t *t = calloc(1, sizeof(*t));
 
-	if (!pub)
+	if (!t)
 		return (NULL);
-	trans = calloc(1, sizeof(*trans));
-	if (!trans)
-		return (NULL);
-	trans->amount = amount;
-	memcpy(trans->pub, pub, EC_PUB_LEN);
-	if (!sha256((const int8_t *)trans, TX_OUT_HASH_LEN, trans->hash))
-	{
-		free(trans);
-		return (NULL);
-	}
-	return (trans);
+
+	t->amount = amount;
+	memcpy(t->pub, pub, sizeof(t->pub));
+	if (!sha256((int8_t const *)t, sizeof(t->amount) + sizeof(t->pub), t->hash))
+		return (free(t), NULL);
+
+	return (t);
 }

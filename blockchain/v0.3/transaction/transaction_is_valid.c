@@ -1,62 +1,73 @@
 #include "transaction.h"
 
 /**
-* cmp_tr_ins - filter trans
+* matcher - finds unmatches
+* @node: curr node
+* @args: args vector
+* Return: 0 on success
+ */
+int matcher(llist_node_t node, void *arg)
+{
+	unspent_tx_out_t *utxo = node;
+	tx_in_t *txi = arg;
+
+	if (!memcmp(txi->tx_out_hash, utxo->out.hash, SHA256_DIGEST_LENGTH))
+		return (1);
+	return (0);
+}
+
+/**
+* check_inputs - vals input
 * @node: curr node
 * @idx: @node
 * @args: args vector
 * Return: 0 on success
 */
 
-int cmp_tr_ins(llist_node_t node, unsigned int idx, void *args)
+int check_inputs(llist_node_t node, unsigned int idx, void *arg)
 {
-	unspent_tx_out_t *unspent = node;
-	void **ptr = args;
-	uint32_t *tx_in_idx = ptr[2], *balance = ptr[1];
-	llist_t *list = ptr[0];
-	tx_in_t *tx_in = llist_get_node_at(list, *tx_in_idx);
+	tx_in_t *txi = node;
+	validation_vistor_t *visitor = arg;
+	unspent_tx_out_t *utxo =
+		llist_find_node(visitor->all_unspent, matcher, txi);
 	EC_KEY *key;
 
-	(void)idx;
-	if (!tx_in)
-		return (1);
-	if (!memcmp(unspent->out.hash, tx_in->tx_out_hash, SHA256_DIGEST_LENGTH))
+	if (!utxo)
 	{
-		*tx_in_idx += 1;
-		*balance += unspent->out.amount;
-		key = ec_from_pub(unspent->out.pub);
-		if (!key)
-			return (1);
-		if (!ec_verify(key, ptr[3], SHA256_DIGEST_LENGTH, &tx_in->sig))
-		{
-			EC_KEY_free(key);
-			return (1);
-		}
-		EC_KEY_free(key);
+		dprintf(2, "check_inputs: utxo NULL\n");
+		visitor->valid = 0;
+		return (1);
 	}
+	key = ec_from_pub(utxo->out.pub);
+	if (!key ||
+		!ec_verify(key, visitor->tx->id, SHA256_DIGEST_LENGTH, &txi->sig))
+	{
+		dprintf(2, "check_inputs: key error\n");
+		visitor->valid = 0;
+		return (EC_KEY_free(key), 1);
+	}
+	EC_KEY_free(key);
+	visitor->in_amount += utxo->out.amount;
 	return (0);
+	(void)idx;
 }
 
 /**
-* check_amounts - check trans match
+* checl_amounts - validates each input
 * @node: curr node
 * @idx: @node
 * @arg: args vector
 * Return: 0 on success
 */
 
-int check_amounts(llist_node_t node, unsigned int idx, void *arg)
+int checl_amounts(llist_node_t node, unsigned int idx, void *arg)
 {
-	uint32_t *balance = arg;
-	tx_out_t *out = node;
+	tx_out_t *txo = node;
+	validation_vistor_t *visitor = arg;
 
-	(void)idx;
-	if (*balance < out->amount)
-	{
-		return (1);
-	}
-	*balance -= out->amount;
+	visitor->out_amount += txo->amount;
 	return (0);
+	(void)idx;
 }
 
 /**
@@ -67,29 +78,25 @@ int check_amounts(llist_node_t node, unsigned int idx, void *arg)
 */
 
 int transaction_is_valid(transaction_t const *transaction,
-						 llist_t *all_unspent)
+	llist_t *all_unspent)
 {
 	uint8_t hash_buf[SHA256_DIGEST_LENGTH];
-	void *args[4];
-	uint32_t idx = 0;
-	uint32_t total_input = 0;
+	validation_vistor_t visitor = {0};
 
 	if (!transaction || !all_unspent)
 		return (0);
-	transaction_hash(transaction, hash_buf);
+	visitor.tx = transaction;
+	visitor.all_unspent = all_unspent;
+	visitor.valid = 1;
+	if (!transaction_hash(transaction, hash_buf))
+		return (0);
 	if (memcmp(transaction->id, hash_buf, SHA256_DIGEST_LENGTH))
-	{
 		return (0);
-	}
-	args[0] = transaction->inputs, args[1] = &total_input;
-	args[2] = &idx, args[3] = (void *)&transaction->id;
-	if (llist_for_each(all_unspent, cmp_tr_ins, args)
-		|| idx != (uint32_t)llist_size(transaction->inputs))
-	{
+	if (llist_for_each(transaction->inputs, check_inputs, &visitor) ||
+		!visitor.valid)
 		return (0);
-	}
-	if (llist_for_each(transaction->outputs, check_amounts, &total_input)
-		|| total_input != 0)
+	if (llist_for_each(transaction->outputs, checl_amounts, &visitor) ||
+		visitor.in_amount != visitor.out_amount || !visitor.in_amount)
 	{
 		return (0);
 	}

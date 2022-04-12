@@ -8,14 +8,18 @@
 
 tx_in_t *tx_in_create(unspent_tx_out_t const *unspent)
 {
-	tx_in_t *tr;
+	tx_in_t *txi;
 
-	tr = malloc(sizeof(*tr));
-	if (!tr)
+	if (!unspent)
 		return (NULL);
-	memcpy(tr->block_hash, unspent->block_hash, SHA256_DIGEST_LENGTH);
-	memcpy(tr->tx_id, unspent->tx_id, SHA256_DIGEST_LENGTH);
-	memcpy(tr->tx_out_hash, unspent->out.hash, SHA256_DIGEST_LENGTH);
-	memset(&tr->sig, 0, sizeof(tr->sig));
-	return (tr);
+
+	txi = calloc(1, sizeof(*txi));
+	if (!txi)
+		return (NULL);
+
+	memcpy(txi->block_hash, unspent->block_hash, sizeof(txi->block_hash));
+	memcpy(txi->tx_id, unspent->tx_id, sizeof(txi->tx_id));
+	memcpy(txi->tx_out_hash, unspent->out.hash, sizeof(txi->tx_out_hash));
+
+	return (txi);
 }

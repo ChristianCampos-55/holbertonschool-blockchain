@@ -12,13 +12,13 @@ unspent_tx_out_t *unspent_tx_out_create(uint8_t
 										uint8_t tx_id[SHA256_DIGEST_LENGTH],
 										tx_out_t const *out)
 {
-	unspent_tx_out_t *tr;
+	unspent_tx_out_t *utx = calloc(1, sizeof(*utx));
 
-	tr = malloc(sizeof(*tr));
-	if (!tr)
+	if (!utx)
 		return (NULL);
-	memcpy(tr->block_hash, block_hash, SHA256_DIGEST_LENGTH);
-	memcpy(tr->tx_id, tx_id, SHA256_DIGEST_LENGTH);
-	memcpy(&tr->out, out, sizeof(*out));
-	return (tr);
+	memcpy(utx->block_hash, block_hash, sizeof(utx->block_hash));
+	memcpy(utx->tx_id, tx_id, sizeof(utx->tx_id));
+	memcpy(&utx->out, out, sizeof(utx->out));
+
+	return (utx);
 }

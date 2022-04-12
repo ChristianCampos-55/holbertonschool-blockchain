@@ -1,23 +1,6 @@
 #include "transaction.h"
 
 /**
-* find_identifier - node searcher
-* @node: llist
-* @hash: to match
-* Return: 1 if found
-*/
-
-int find_identifier(llist_node_t node, void *hash)
-{
-	if (!memcmp(((unspent_tx_out_t *)node)->out.hash,
-				hash, SHA256_DIGEST_LENGTH))
-	{
-		return (1);
-	}
-	return (0);
-}
-
-/**
 * tx_in_sign - sign trans
 * @in:  trans pointer
 * @tx_id: trans id
@@ -27,26 +10,24 @@ int find_identifier(llist_node_t node, void *hash)
 */
 
 sig_t *tx_in_sign(tx_in_t *in, uint8_t const tx_id[SHA256_DIGEST_LENGTH],
-				  EC_KEY const *sender, llist_t *all_unspent)
+					EC_KEY const *sender, llist_t *all_unspent)
 {
-	uint8_t buffer[EC_PUB_LEN];
-	unspent_tx_out_t *unspent;
+	uint8_t pub[EC_PUB_LEN];
+	ssize_t i;
+	unspent_tx_out_t *utx;
 
-	if (!in || !tx_id || !sender || !all_unspent)
-		return (NULL);
-	ec_to_pub(sender, buffer);
-	unspent = llist_find_node(all_unspent, find_identifier, in->tx_out_hash);
-	if (!unspent)
+	for (i = 0; i < llist_size(all_unspent); i++)
 	{
-		return (NULL);
+		utx = llist_get_node_at(all_unspent, i);
+		if (!memcmp(in->tx_out_hash, utx->out.hash, SHA256_DIGEST_LENGTH))
+			break;
+		utx = NULL;
 	}
-	if (memcmp(unspent->out.pub, buffer, EC_PUB_LEN))
-	{
+
+	if (!utx || !ec_to_pub(sender, pub) || memcmp(pub, utx->out.pub, EC_PUB_LEN))
 		return (NULL);
-	}
 	if (!ec_sign(sender, tx_id, SHA256_DIGEST_LENGTH, &in->sig))
-	{
 		return (NULL);
-	}
+
 	return (&in->sig);
 }
