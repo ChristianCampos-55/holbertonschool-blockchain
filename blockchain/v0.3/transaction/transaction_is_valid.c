@@ -41,7 +41,7 @@ int cmp_tr_ins(llist_node_t node, unsigned int idx, void *args)
 * check_amounts - check trans match
 * @node: curr node
 * @idx: @node
-* @args: args vector
+* @arg: args vector
 * Return: 0 on success
 */
 
