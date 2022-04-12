@@ -1,8 +1,8 @@
 #include "blockchain.h"
 
 /**
-* tx_to_buffer - copies to buffer
-* @tr: trans node
+* hash_tx_ids - copies to buffer
+* @node: trans node
 * @idx:  @tr
 * @arg: argument vector
 * Return: 0
