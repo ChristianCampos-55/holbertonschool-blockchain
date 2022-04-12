@@ -1,10 +1,10 @@
 #include "transaction.h"
 
 /**
-* tx_out_create - allocates and initializes a transaction output structure
-* @amount: the amount of the transaction
-* @pub: the public key of a transaction receiver
-* Return: pointer to the created transaction output
+* tx_out_create - create transaction output
+* @amount: amount of transaction
+* @pub: public key of transaction receiver
+* Return: transaction output
 */
 
 tx_out_t *tx_out_create(uint32_t amount, uint8_t const pub[EC_PUB_LEN])

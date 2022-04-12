@@ -14,19 +14,23 @@
 #define GENESIS_DATA "Holberton School"
 #define GENESIS_TIMESTAMP 1537578000
 #define GENESIS_DATA_LEN 16
+#define BLOCKCHAIN_DATA_MAX 1024
+#undef MT_SUPPORT_TRUE
+#define MT_SUPPORT_TRUE (1U << 0)
 #define UNUSED(x) (void)(x)
 #define BLOCK_GENERATION_INTERVAL 1
 #define DIFFICULTY_ADJUSTMENT_INTERVAL 5
 
-
 /**
  * struct blockchain_s - Block struct
  * @chain: pointers to block_t
+ * @unspent: unspent trans
  */
 
 typedef struct blockchain_s
 {
-	llist_t     *chain;
+	llist_t *chain;
+	llist_t *unspent;
 } blockchain_t;
 
 #define BLOCKCHAIN_DATA_MAX 1024
@@ -39,8 +43,8 @@ typedef struct blockchain_s
 
 typedef struct block_data_s
 {
-	int8_t      buffer[BLOCKCHAIN_DATA_MAX];
-	uint32_t    len;
+	int8_t buffer[BLOCKCHAIN_DATA_MAX];
+	uint32_t len;
 } block_data_t;
 
 /**
@@ -50,7 +54,7 @@ typedef struct block_data_s
  * @timestamp: time of creation
  * @nonce: alter block
  * @prev_hash: prev block in chain
- */ 
+ */
 
 typedef struct block_info_s
 {
@@ -65,16 +69,16 @@ typedef struct block_info_s
  * struct block_s - structure
  * @info: info
  * @data: data
- * @transactions: transactions
+ * @transactions: list of trans
  * @hash: 256-bit digest
  */
 
 typedef struct block_s
 {
-	block_info_t    info;
-	block_data_t    data;
-	llist_t     *transactions;
-	uint8_t     hash[SHA256_DIGEST_LENGTH];
+	block_info_t info;
+	block_data_t data;
+	llist_t *transactions;
+	uint8_t hash[SHA256_DIGEST_LENGTH];
 } block_t;
 
 /**
@@ -103,12 +107,12 @@ uint8_t *block_hash(block_t const *block,
 					uint8_t hash_buf[SHA256_DIGEST_LENGTH]);
 int blockchain_serialize(blockchain_t const *blockchain, char const *path);
 blockchain_t *blockchain_deserialize(char const *path);
-int block_is_valid(block_t const *block, block_t const *prev_block);
+int block_is_valid(block_t const *block, block_t const *prev_block,
+					llist_t *all_unspent);
 uint8_t _get_endianness(void);
 void _swap_endian(void *p, size_t size);
 int hash_matches_difficulty(uint8_t const hash[SHA256_DIGEST_LENGTH],
 							uint32_t difficulty);
-int block_is_valid(block_t const *block, block_t const *prev_block);
 void block_mine(block_t *block);
 uint32_t blockchain_difficulty(blockchain_t const *blockchain);
 

@@ -55,7 +55,7 @@ int read_blocks(FILE *fp, uint8_t swap_endian,
 /**
 * blockchain_deserialize - loads b
 * @path: file
-* Return: loaded blockchain
+* Return: loaded b
 */
 
 blockchain_t *blockchain_deserialize(char const *path)

@@ -35,13 +35,13 @@ blockchain_t *blockchain_create(void)
 	blockchain = malloc(sizeof(*blockchain));
 	if (!blockchain)
 		return (NULL);
-	genesis = genesis_block();
+	genesis = create_genesis_block();
 	if (!genesis)
 	{
 		free(blockchain);
 		return (NULL);
 	}
-	blockchain->chain = llist_create(MT_SUPPORT_TRUE);
+	blockchain->chain = llist_create(MT_SUPPORT_FALSE);
 	if (!blockchain->chain)
 	{
 		free(blockchain), free(genesis);
@@ -53,5 +53,6 @@ blockchain_t *blockchain_create(void)
 		free(blockchain), free(genesis);
 		return (NULL);
 	}
+	blockchain->unspent = llist_create(MT_SUPPORT_FALSE);
 	return (blockchain);
 }

@@ -18,14 +18,34 @@ static int verify_genesis_block(block_t const *block)
 	return (ret * -1);
 }
 
+
+/**
+* verify_transactions - verify trans
+* @node: curr node
+* @idx: @node
+* @all_unspent: unspent trans'
+* Return: 0 or 1 upon failure
+*/
+
+int verify_transactions(llist_node_t node, unsigned int idx, void *all_unspent)
+{
+	if (idx == 0)
+		return (0);
+	if (!transaction_is_valid(node, all_unspent))
+		return (1);
+	return (0);
+}
+
 /**
 * verify_blocks - Block is valid
 * @block: block to verify
 * @prev_block: previous
-* Return: -1 if block is not valid
+* @all_unspent: unspent trans
+* Return: -1 if unvalid b
 */
 
-static int verify_blocks(block_t const *block, block_t const *prev_block)
+static int verify_blocks(block_t const *block,
+						 block_t const *prev_block, llist_t *all_unspent)
 {
 	uint8_t block_sha[SHA256_DIGEST_LENGTH];
 	uint8_t prev_sha[SHA256_DIGEST_LENGTH];
@@ -41,6 +61,13 @@ static int verify_blocks(block_t const *block, block_t const *prev_block)
 		return (-1);
 	if (block->data.len > BLOCKCHAIN_DATA_MAX)
 		return (-1);
+	if (llist_size(block->transactions) < 1)
+		return (-1);
+	if (!coinbase_is_valid(llist_get_head(block->transactions),
+						   block->info.index))
+		return (-1);
+	if (llist_for_each(block->transactions, verify_transactions, all_unspent))
+		return (-1);
 	return (0);
 }
 
@@ -48,10 +75,12 @@ static int verify_blocks(block_t const *block, block_t const *prev_block)
 * block_is_valid - a function that verifies validity
 * @block: block to verify
 * @prev_block: previous
+* @all_unspent: unspent trans
 * Return: -1 if block is not valid
 */
 
-int block_is_valid(block_t const *block, block_t const *prev_block)
+int block_is_valid(block_t const *block, block_t const *prev_block,
+				   llist_t *all_unspent)
 {
 	if (!block)
 		return (-1);
@@ -59,5 +88,5 @@ int block_is_valid(block_t const *block, block_t const *prev_block)
 		return (-1);
 	if (!prev_block)
 		return (verify_genesis_block(block));
-	return (verify_blocks(block, prev_block));
+	return (verify_blocks(block, prev_block, all_unspent));
 }
