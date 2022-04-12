@@ -1,73 +1,28 @@
 #include "blockchain.h"
 
 /**
-* verify_genesis_block - a function that checks genesis block
-* @block: block to verify
+* validate_tx - a function that checks genesis block
+* @node: transaction node
+* @idx:  @tr
+* @arg: argument vector
 * Return: -1 if not valid
 */
 
-static int verify_genesis_block(block_t const *block)
+int validate_tx(llist_node_t node, unsigned int idx, void *arg)
 {
-	blockchain_t *blockchain = blockchain_create();
-	int ret = 0;
+	transaction_t *tx = node;
+	validation_vistor_t *visitor = arg;
 
-	if (!blockchain)
-		return (-1);
-	ret = memcmp(block, llist_get_head(blockchain->chain), sizeof(*block)) != 0;
-	blockchain_destroy(blockchain);
-	return (ret * -1);
-}
-
-
-/**
-* verify_transactions - verify trans
-* @node: curr node
-* @idx: @node
-* @all_unspent: unspent trans'
-* Return: 0 or 1 upon failure
-*/
-
-int verify_transactions(llist_node_t node, unsigned int idx, void *all_unspent)
-{
-	if (idx == 0)
-		return (0);
-	if (!transaction_is_valid(node, all_unspent))
-		return (1);
-	return (0);
-}
-
-/**
-* verify_blocks - Block is valid
-* @block: block to verify
-* @prev_block: previous
-* @all_unspent: unspent trans
-* Return: -1 if unvalid b
-*/
-
-static int verify_blocks(block_t const *block,
-						 block_t const *prev_block, llist_t *all_unspent)
-{
-	uint8_t block_sha[SHA256_DIGEST_LENGTH];
-	uint8_t prev_sha[SHA256_DIGEST_LENGTH];
-
-	if (prev_block->info.index != block->info.index - 1)
-		return (-1);
-	if (!block_hash(prev_block, prev_sha) ||
-		memcmp(prev_block->hash, prev_sha, SHA256_DIGEST_LENGTH))
-		return (-1);
-	if (!block_hash(block, block_sha) ||
-		memcmp(block->hash, block_sha, SHA256_DIGEST_LENGTH) ||
-		memcmp(block->info.prev_hash, prev_sha, SHA256_DIGEST_LENGTH))
-		return (-1);
-	if (block->data.len > BLOCKCHAIN_DATA_MAX)
-		return (-1);
-	if (llist_size(block->transactions) < 1)
-		return (-1);
-	if (!coinbase_is_valid(llist_get_head(block->transactions),
-						   block->info.index))
-		return (-1);
-	if (llist_for_each(block->transactions, verify_transactions, all_unspent))
-		return (-1);
+	if (!idx)
+	{
+		if (!coinbase_is_valid(tx, visitor->block_index))
+			visitor->valid = 0;
+	}
+	else if (!transaction_is_valid(tx, visitor->all_unspent))
+	{
+		dprintf(2, "validate_tx: invalid idx %u\n", idx);
+		visitor->valid = 0;
+	}
 	return (0);
 }
 
@@ -82,11 +37,45 @@ static int verify_blocks(block_t const *block,
 int block_is_valid(block_t const *block, block_t const *prev_block,
 				   llist_t *all_unspent)
 {
-	if (!block)
-		return (-1);
-	if (hash_matches_difficulty(block->hash, block->info.difficulty) == 0)
-		return (-1);
-	if (!prev_block)
-		return (verify_genesis_block(block));
-	return (verify_blocks(block, prev_block, all_unspent));
+	uint8_t hash_buf[SHA256_DIGEST_LENGTH] = {0};
+	block_t const _genesis = GENESIS_BLOCK;
+	validation_vistor_t visitor = {0};
+
+	if (!block || (!prev_block && block->info.index != 0))
+		return (1);
+
+	if (block->info.index == 0)
+		return (memcmp(block, &_genesis, sizeof(_genesis)));
+
+	if (block->info.index != prev_block->info.index + 1)
+		return (1);
+
+	if (!block_hash(prev_block, hash_buf) ||
+		memcmp(hash_buf, prev_block->hash, SHA256_DIGEST_LENGTH))
+		return (1);
+
+	if (memcmp(prev_block->hash, block->info.prev_hash, SHA256_DIGEST_LENGTH))
+		return (1);
+
+	if (!block_hash(block, hash_buf) ||
+		memcmp(hash_buf, block->hash, SHA256_DIGEST_LENGTH))
+		return (1);
+
+	if (block->data.len > BLOCKCHAIN_DATA_MAX)
+		return (1);
+
+	if (!hash_matches_difficulty(block->hash, block->info.difficulty))
+		return (1);
+
+	if (llist_size(block->transactions) < 1)
+		return (1);
+
+	visitor.valid = 1;
+	visitor.all_unspent = all_unspent;
+	visitor.block_index = block->info.index;
+	if (llist_for_each(block->transactions, validate_tx, &visitor) ||
+		!visitor.valid)
+		return (1);
+
+	return (0);
 }

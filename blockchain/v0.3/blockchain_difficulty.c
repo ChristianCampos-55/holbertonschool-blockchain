@@ -8,30 +8,30 @@
 
 uint32_t blockchain_difficulty(blockchain_t const *blockchain)
 {
-	block_t *last, *prev;
-	uint64_t diff, interval;
-	uint32_t new_difficulty;
+	block_t *l_b, *ad_c;
+	uint64_t et, at;
 
 	if (!blockchain)
 		return (0);
-	last = llist_get_tail(blockchain->chain);
-	if (!last)
+
+	l_b = llist_get_tail(blockchain->chain);
+	if (!l_b)
 		return (0);
-	if (last->info.index == 0 ||
-		last->info.index % DIFFICULTY_ADJUSTMENT_INTERVAL != 0)
-	{
-		return (last->info.difficulty);
-	}
-	prev = llist_get_node_at(blockchain->chain,
-							 last->info.index + 1 - DIFFICULTY_ADJUSTMENT_INTERVAL);
-	if (!prev)
-		return (0);
-	diff = last->info.timestamp - prev->info.timestamp;
-	new_difficulty = last->info.difficulty;
-	interval = DIFFICULTY_ADJUSTMENT_INTERVAL * BLOCK_GENERATION_INTERVAL;
-	if (diff * 2 < interval)
-		++new_difficulty;
-	else if (diff > interval * 2)
-		new_difficulty = new_difficulty > 0 ? new_difficulty - 1 : 0;
-	return (new_difficulty);
+
+	if (l_b->info.index == 0 ||
+		l_b->info.index % DIFFICULTY_ADJUSTMENT_INTERVAL)
+		return (l_b->info.difficulty);
+
+	ad_c = llist_get_node_at(blockchain->chain,
+		l_b->info.index + 1 - DIFFICULTY_ADJUSTMENT_INTERVAL);
+	et = DIFFICULTY_ADJUSTMENT_INTERVAL * BLOCK_GENERATION_INTERVAL;
+	at = l_b->info.timestamp - ad_c->info.timestamp;
+	if (at * 2 < et)
+		return (l_b->info.difficulty + 1);
+
+	else if (at > 2 * et)
+		return (l_b->info.difficulty > 0 ?
+			l_b->info.difficulty - 1 : 0);
+
+	return (l_b->info.difficulty);
 }

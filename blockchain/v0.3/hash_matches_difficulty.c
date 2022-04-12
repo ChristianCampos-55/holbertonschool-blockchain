@@ -1,6 +1,29 @@
 #include "blockchain.h"
 
 /**
+ * get_harshness - bits in hash
+ * @hash: buffer
+ * Return: harshness
+ */
+uint32_t get_difficulty(uint8_t const hash[SHA256_DIGEST_LENGTH])
+{
+	uint8_t *ptr = (uint8_t *)hash;
+	uint32_t harshness = 0;
+	int i;
+
+	for (; ptr < hash + SHA256_DIGEST_LENGTH; ptr++)
+	{
+		for (i = 7; i >= 0; i--)
+		{
+			if ((*ptr >> i) & 1)
+				return (harshness);
+			harshness++;
+		}
+	}
+	return (harshness);
+}
+
+/**
 * hash_matches_difficulty - checks for hash match
 * @hash: hash
 * @difficulty: block stifness
@@ -8,19 +31,9 @@
 */
 
 int hash_matches_difficulty(uint8_t const hash[SHA256_DIGEST_LENGTH],
-							uint32_t difficulty)
+	uint32_t difficulty)
 {
-	uint32_t i, mod;
-
-	mod = difficulty & 7;
-	difficulty -= mod;
-	difficulty /= 8;
-	for (i = 0; i < difficulty; ++i)
-	{
-		if (hash[i] != 0)
-			return (0);
-	}
-	if (hash[difficulty] >> (8 - mod))
+	if (!hash)
 		return (0);
-	return (1);
+	return (get_harshness(hash) >= difficulty);
 }
