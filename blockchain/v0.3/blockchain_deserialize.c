@@ -40,6 +40,7 @@ llist_t *deserialize_blocks(int fd, uint32_t size, uint8_t endianness)
 	}
 
 	return (list);
+}
 
 /**
 * blockchain_deserialize - loads b
@@ -60,32 +61,24 @@ blockchain_t *blockchain_deserialize(char const *path)
 	fd = open(path, O_RDONLY);
 	if (fd == -1)
 		return (NULL);
-
 	if (read(fd, buf, strlen(HBLK_MAGIC)) != strlen(HBLK_MAGIC) ||
 		strcmp(buf, HBLK_MAGIC))
 		return (CLEAN_UP, NULL);
-
 	buf[strlen(HBLK_VERSION)] = 0;
 	if (read(fd, buf, strlen(HBLK_VERSION)) != strlen(HBLK_VERSION) ||
 		strcmp(buf, HBLK_VERSION))
 		return (CLEAN_UP, NULL);
-
 	chain = calloc(1, sizeof(*chain));
 	if (!chain)
 		return (CLEAN_UP, NULL);
-
 	if (read(fd, &endianness, 1) != 1)
 		return (CLEAN_UP, NULL);
-
 	endianness = endianness != _get_endianness();
 	if (read(fd, &size, 4) != 4)
 		return (CLEAN_UP, NULL);
-
 	CHECK_ENDIAN(size);
 	chain->chain = deserialize_blocks(fd, size, endianness);
 	if (!chain)
 		return (CLEAN_UP, NULL);
-
 	return (close(fd), chain);
-}
 }

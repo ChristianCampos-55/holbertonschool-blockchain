@@ -22,13 +22,10 @@ int blockchain_serialize(blockchain_t const *blockchain, char const *path)
 
 	if (write(fd, HBLK_MAGIC, strlen(HBLK_MAGIC)) != strlen(HBLK_MAGIC))
 		return (close(fd), -1);
-
 	if (write(fd, HBLK_VERSION, strlen(HBLK_VERSION)) != strlen(HBLK_VERSION))
 		return (close(fd), -1);
-
 	if (write(fd, &endianness, 1) != 1)
 		return (close(fd), -1);
-
 	if (write(fd, &size, 4) != 4)
 		return (close(fd), -1);
 
@@ -38,20 +35,15 @@ int blockchain_serialize(blockchain_t const *blockchain, char const *path)
 
 		if (!block)
 			return (close(fd), -1);
-	
 		if (write(fd, &(block->info), sizeof(block->info)) != sizeof(block->info))
 			return (close(fd), -1);
-
 		if (write(fd, &(block->data.len), 4) != 4)
 			return (close(fd), -1);
-
 		if (write(fd, block->data.buffer, block->data.len) != block->data.len)
 			return (close(fd), -1);
-
 		if (write(fd, block->hash, SHA256_DIGEST_LENGTH) !=
 			SHA256_DIGEST_LENGTH)
 			return (close(fd), -1);
 	}
-
 	return (close(fd), 0);
 }
