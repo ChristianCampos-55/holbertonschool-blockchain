@@ -3,9 +3,10 @@
 /**
 * matcher - finds unmatches
 * @node: curr node
-* @args: args vector
+* @arg: args vector
 * Return: 0 on success
- */
+*/
+
 int matcher(llist_node_t node, void *arg)
 {
 	unspent_tx_out_t *utxo = node;
@@ -20,7 +21,7 @@ int matcher(llist_node_t node, void *arg)
 * check_inputs - vals input
 * @node: curr node
 * @idx: @node
-* @args: args vector
+* @arg: args vector
 * Return: 0 on success
 */
 

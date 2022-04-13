@@ -72,7 +72,7 @@ int maps_txo(llist_node_t node, unsigned int idx, void *_args)
  * tx_mapper - maps tx
  * @node: current block
  * @idx: block index
- * @_args: args vector
+ * @__args: args vector
  * Return: 0 if groovy
  */
 
