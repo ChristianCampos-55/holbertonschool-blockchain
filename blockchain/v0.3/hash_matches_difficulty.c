@@ -5,7 +5,7 @@
  * @hash: buffer
  * Return: harshness
  */
-uint32_t get_difficulty(uint8_t const hash[SHA256_DIGEST_LENGTH])
+uint32_t get_harshness(uint8_t const hash[SHA256_DIGEST_LENGTH])
 {
 	uint8_t *ptr = (uint8_t *)hash;
 	uint32_t harshness = 0;
